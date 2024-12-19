@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таблица напитков</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+            color: #333;
+        }
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .filters label {
+            font-weight: bold;
+        }
+        table {
+            width: 90%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        th {
+            background-color: #333;
+            color: #fff;
+            position: relative;
+        }
+        th.sortable::after {
+            content: " ⬍"; /* Значок сортировки */
+            font-size: 12px;
+            margin-left: 5px;
+            color: #fff;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Список напитков</h1>
+    <div class="filters">
+        <div>
+            <label for="filter-drinktype">Тип напитка:</label>
+            <select id="filter-drinktype" onchange="filterTable()">
+                <option value="">Все</option>
+                {% for type in drinktypes %}
+                <option value="{{ type }}">{{ type }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="filter-color">Цвет:</label>
+            <select id="filter-color" onchange="filterTable()">
+                <option value="">Все</option>
+                {% for color in colors %}
+                <option value="{{ color }}">{{ color }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="filter-sugar">Сахар:</label>
+            <select id="filter-sugar" onchange="filterTable()">
+                <option value="">Все</option>
+                {% for sugar in sugars %}
+                <option value="{{ sugar }}">{{ sugar }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="filter-whiskey">Тип виски:</label>
+            <select id="filter-whiskey" onchange="filterTable()">
+                <option value="">Все</option>
+                {% for whiskey in whiskey_types %}
+                <option value="{{ whiskey }}">{{ whiskey }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <table id="drinksTable">
+        <thead>
+            <tr>
+                <th>Тип напитка</th>
+                <th>Название</th>
+                <th class="sortable" onclick="sortTable(2)">Цена</th>
+                <th>Цвет</th>
+                <th>Регион</th>
+                <th>Сахар</th>
+                <th>Сорт винограда</th>
+                <th>Производитель</th>
+                <th class="sortable" onclick="sortTable(8)">Алкоголь (%)</th>
+                <th class="sortable" onclick="sortTable(9)">Объем (л)</th>
+                <th>Тип виски</th>
+                <th>Алкоголь (л)</th>
+                <th class="sortable" onclick="sortTable(12)">Цена за литр (руб./л)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for drink in drinks %}
+            <tr>
+                <td>{{ drink[0] }}</td>
+                <td> <a href="{{ drink[13] }}" target="_blank">{{ drink[1] }}</a> </td>
+                <td>{{ drink[2] | round(3) }} руб.</td>
+                <td>{{ drink[3] }}</td>
+                <td>{{ drink[4] }}</td>
+                <td>{{ drink[5] }}</td>
+                <td>{{ drink[6] }}</td>
+                <td>{{ drink[7] }}</td>
+                <td>{{ drink[8] | round(3) }}</td>
+                <td>{{ drink[9] | round(3) }}</td>
+                <td>{{ drink[10] }}</td>
+                <td>{{ drink[11] | round(3) }}</td>
+                <td>{{ drink[12] | round(3) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        let sortDirection = {};
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById("drinksTable");
+            const rows = Array.from(table.rows).slice(1); // Пропускаем заголовок
+            const currentDirection = sortDirection[columnIndex] || "asc"; // Текущее направление (по умолчанию "asc")
+
+            const newDirection = currentDirection === "asc" ? "desc" : "asc";
+            sortDirection[columnIndex] = newDirection;
+
+            const sortedRows = rows.sort((rowA, rowB) => {
+                const cellA = parseFloat(rowA.cells[columnIndex].innerText.replace(/[^0-9.]/g, '')) || 0;
+                const cellB = parseFloat(rowB.cells[columnIndex].innerText.replace(/[^0-9.]/g, '')) || 0;
+
+                return newDirection === "asc" ? cellA - cellB : cellB - cellA;
+            });
+
+            const tbody = table.tBodies[0];
+            tbody.innerHTML = "";
+            sortedRows.forEach(row => tbody.appendChild(row));
+        }
+
+        function filterTable() {
+            const filterDrinktype = document.getElementById("filter-drinktype").value.toLowerCase();
+            const filterColor = document.getElementById("filter-color").value.toLowerCase();
+            const filterSugar = document.getElementById("filter-sugar").value.toLowerCase();
+            const filterWhiskey = document.getElementById("filter-whiskey").value.toLowerCase();
+
+            const table = document.getElementById("drinksTable");
+            const rows = Array.from(table.tBodies[0].rows);
+
+            rows.forEach(row => {
+                const drinktype = row.cells[0].innerText.toLowerCase();
+                const color = row.cells[3].innerText.toLowerCase();
+                const sugar = row.cells[5].innerText.toLowerCase();
+                const whiskeyType = row.cells[10].innerText.toLowerCase();
+
+                const matchDrinktype = !filterDrinktype || drinktype == filterDrinktype;
+                const matchColor = !filterColor || color == filterColor;
+                const matchSugar = !filterSugar || sugar == filterSugar;
+                const matchWhiskey = !filterWhiskey || whiskeyType == filterWhiskey;
+
+                row.style.display = matchDrinktype && matchColor && matchSugar && matchWhiskey ? "" : "none";
+            });
+        }
+    </script>
+</body>
+</html>
