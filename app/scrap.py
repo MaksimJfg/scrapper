@@ -10,9 +10,9 @@ urls = {"wine": "https://simplewine.ru/catalog/vino/page",
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
 
-def scrapp():
+def scrapp_wine(pages):
     drinks = []
-    for cnt in range(1, 2):
+    for cnt in range(1, pages + 1):
         link = urls["wine"] + str(cnt)
         response = requests.get(link, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -20,7 +20,7 @@ def scrapp():
         for i in wines:
             try:
                 winelink = "https://simplewine.ru" + \
-                       i.find_all("a", {"class": "swiper-container js-toggle-group js-dy-slot-click"})[0]["href"]
+                           i.find_all("a", {"class": "swiper-container js-toggle-group js-dy-slot-click"})[0]["href"]
                 response2 = requests.get(winelink, headers=headers)
                 response2.raise_for_status()
                 soup = BeautifulSoup(response2.text, 'html.parser')
@@ -29,11 +29,7 @@ def scrapp():
                 drinktype = "Вино"
                 name = i.find_all("div", {"id": "snippet-buy-block"})[0]["data-product-name"]
                 price = float(soup.find_all("meta", {"itemprop": "price"})[0]["content"])
-                color = data[0].text.strip()
-                region = data[1].text.strip()
-                sugar = data[2].text.strip()
-                grape = data[3].text.strip()
-                manufacture = data[4].text.strip()
+                color, region, sugar, grape, manufacture = list(map(lambda x: x.strip(), [data[j].text for j in range(5)]))
                 strength = float(data[5].text.strip()[0:-1])
                 volume = float(data[6].text.strip()[0:-2])
                 whiskey_type = "-"
@@ -41,7 +37,11 @@ def scrapp():
                                volume, whiskey_type, volume * strength / 100, price / volume, winelink))
             except Exception:
                 pass
-    for cnt in range(1, 1):
+    return drinks
+
+def scrapp_champagne(pages):
+    drinks = []
+    for cnt in range(1, pages + 1):
         link = urls["champagne"] + str(cnt)
         response = requests.get(link, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -58,11 +58,7 @@ def scrapp():
                 drinktype = "Игристое вино"
                 name = i.find_all("div", {"id": "snippet-buy-block"})[0]["data-product-name"]
                 price = float(soup.find_all("meta", {"itemprop": "price"})[0]["content"])
-                color = data[0].text.strip()
-                region = data[1].text.strip()
-                sugar = data[2].text.strip()
-                grape = data[3].text.strip()
-                manufacture = data[4].text.strip()
+                color, region, sugar, grape, manufacture = list(map(lambda x: x.strip(), [data[j].text for j in range(5)]))
                 strength = float(data[5].text.strip()[0:-1])
                 volume = float(data[6].text.strip()[0:-2])
                 whiskey_type = "-"
@@ -70,7 +66,11 @@ def scrapp():
                                volume, whiskey_type, volume * strength / 100, price / volume, winelink))
             except Exception:
                 pass
-    for cnt in range(1, 1):
+    return drinks
+
+def scrapp_whiskey(pages):
+    drinks = []
+    for cnt in range(1, pages + 1):
         link = urls["whiskey"] + str(cnt)
         response = requests.get(link, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -124,9 +124,10 @@ def create_table():
     linktodrink TEXT
     )
     ''')
+    drinks = scrapp_whiskey(0) + scrapp_champagne(1) + scrapp_wine(0)
     cursor.executemany('''INSERT INTO Drinks (drinktype, name, price, color, region, sugar, grape, manufacture, strength,
                               volume, whiskey_type, alcohol, priceforliter, linktodrink) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                       scrapp())
+                       drinks)
     connection.commit()
     connection.close()
 
