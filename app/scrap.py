@@ -124,7 +124,7 @@ def create_table():
     linktodrink TEXT
     )
     ''')
-    drinks = scrapp_whiskey(0) + scrapp_champagne(0) + scrapp_wine(0)
+    drinks = scrapp_whiskey(0) + scrapp_champagne(1) + scrapp_wine(0)
     cursor.executemany('''INSERT INTO Drinks (drinktype, name, price, color, region, sugar, grape, manufacture, strength,
                               volume, whiskey_type, alcohol, priceforliter, linktodrink) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                        drinks)
